@@ -140,9 +140,5 @@ public class Alpha implements Processor {
 		System.out.println("Starting Tempo Estimation (NOT IMPLEMENTED!) ...");
 	}
 	
-	public static void main(String argv[]) {
-		Processor p = new Alpha();
-		
-		p.process("train/train1.wav");
-	}
+	
 }
