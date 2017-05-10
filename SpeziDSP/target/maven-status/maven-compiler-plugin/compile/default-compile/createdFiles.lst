@@ -1,0 +1,8 @@
+at/jku/cp/spezi/dsp/Processor.class
+at/jku/cp/spezi/example/TooSimple.class
+at/jku/cp/spezi/Utils.class
+at/jku/cp/spezi/shortname/ShortName.class
+at/jku/cp/spezi/dsp/AudioFile.class
+at/jku/cp/spezi/dsp/Frame.class
+at/jku/cp/spezi/dsp/FFT.class
+at/jku/cp/spezi/Runner.class
