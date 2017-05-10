@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import at.jku.cp.spezi.dsp.AudioFile;
+import at.jku.cp.spezi.dsp.Frame;
 import at.jku.cp.spezi.dsp.Processor;
 import at.jku.cp.spezi.example.TooSimple;
 
@@ -79,49 +80,100 @@ public class Alpha implements Processor {
 	 */
 	private void onsetDetection() {
 		System.out.println("Starting Onset Detection ...");
+		spectralDifference();
+	}
+	
+	private void spectralDifference() {
+		
+		double songDuration = audioFile.getSamples().size()/audioFile.getSampleRate();
 
-		// this is the time difference between two consecutive samples
-		double sampleTimeInSeconds = 1d / audioFile.getSampleRate();
-
-		// this list stores the audio samples from the WAV file
-		List<Double> samples = audioFile.getSamples();
-
-		// if we wanted the list of STFT frames, we'd call
-		// List<Frame> frames = audioFile.getFrames();
-
-		// average samples in a window extending 400 samples into the past and
-		// the future
-		// 'x' is the current sample
-		// |..............x..............|
-		int w = 400;
-
-		// where did this threshold come from? for the purpose of this example,
-		// we pulled it out of our hat. for the competition you should
-		// definitely
-		// try to tune any such 'magic numbers' ...
-		double threshold = 0.35;
-
-		// - run over all samples from the signal
-		// - compute the average over the energy in a window
-		// - report everything larger than that average plus a threshold
-		for (int i = w; i < samples.size() - w; i++) {
-			double mean = 0d;
-			for (int j = -w; j < w; j++) {
-				mean = mean + Math.abs(samples.get(i + j));
+		List<Frame> frames = audioFile.getFrames();
+		double frameDuration = songDuration/frames.size();
+		
+	
+		List<Double> sd = new ArrayList<>();
+		for(int i=1;i<frames.size();i++) {
+			Frame a = frames.get(i);
+			Frame b = frames.get(i-1);
+			double sum=0;
+			for(int j = 0;j<a.magnitudes.length;j++) {
+				double x = a.magnitudes[j]-b.magnitudes[j];
+				if(x<=0) {
+					x=0;
+				}
+				sum+=Math.pow(x, 2);
 			}
-			mean = mean / (2 * w + 1);
-
-			// if the current sample-value is greater than
-			//
-			// threshold + mean(window)
-			//
-			// we report an onset ...
-
-			if (threshold + mean < samples.get(i)) {
-				onsets.add(i * sampleTimeInSeconds);
-				System.out.println(i * sampleTimeInSeconds);
+			sd.add(sum);
+			//System.out.println(sum);
+		}
+		peakPicking(sd,frameDuration);
+		
+		
+		
+	}
+	
+	private void peakPicking(List<Double> values,double frameDuration) {
+		List<Double > sd = normalizeValues(values);
+		int w = 3,m=3;
+		double alpha=0.3;
+		double threshold = 0.15;
+		for(int i=0;i<sd.size();i++) {
+			
+			double fn = sd.get(i);
+			boolean cond1 = true;
+			double fk_sum=0;
+			for(int j=i-w;j<i+w;j++) {
+				if(j>=0&&j<sd.size()) {
+					if(fn<sd.get(j)) {
+						cond1=false;
+					}
+					fk_sum+=sd.get(j);
+				}
+			}
+			boolean cond2=fn>=fk_sum/(m*w+w+1)+threshold;
+			boolean cond3=fn>=thresholdFunction(i-1,sd,alpha);
+			
+			
+			if(cond1&&cond2&&cond3) {
+				onsets.add(i * frameDuration);
+				//System.out.println(i * frameDuration);
 			}
 		}
+	}
+	private double thresholdFunction(int n,List<Double> values,double alpha) {
+		double g=0;
+		if(n>=0&&n<values.size()) {
+			double fn = values.get(n);
+			double secondValue = alpha*thresholdFunction(n-1,values,alpha)+(1-alpha)*fn;
+			g=Math.max(fn, secondValue);
+		}
+		
+		
+		return g;
+	}
+	
+	private List<Double> normalizeValues(List<Double> values) {
+		double mean=getMean(values);
+		double sd = getSD(values,mean);
+		
+		for(int i=0;i<values.size();i++) {
+			values.set(i, (values.get(i)-mean)/sd);
+		}
+		return values;
+	}
+	private double getMean(List<Double> values) {
+		double mean=0;
+		for(int i=0;i<values.size();i++)
+			mean+=values.get(i);
+		return mean/values.size();
+	}
+	private double getSD(List<Double> values, double mean) {
+		double sd = 0;
+		
+		for(int i=0;i<values.size();i++) {
+			sd+=Math.pow(values.get(i)-mean, 2);
+		}
+		return Math.pow(sd/values.size(),0.5);
 	}
 
 	/**
