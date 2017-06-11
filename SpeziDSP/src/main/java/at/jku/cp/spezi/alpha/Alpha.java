@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import at.jku.cp.spezi.alpha.detection.AutoCorrTempoDetection;
 import at.jku.cp.spezi.alpha.detection.EnergyBasedOnsetDetection;
 import at.jku.cp.spezi.alpha.detection.LFSFOnsetDetection;
 import at.jku.cp.spezi.alpha.detection.SpectralDifferenceOnsetDetection;
@@ -33,6 +34,8 @@ public class Alpha implements Processor {
 			.alpha(0.82655126)
 			.threshold(0.34489238772825725)
 			.numOfFilters(138);
+	
+	private static final AutoCorrTempoDetection.Parameters AC_TEMPO_DETECTION_PARAMS = AutoCorrTempoDetection.createParams().medianWindow(10);
 			
 	private final static Consumer<Alpha> DEFAULT_DETECTION_FUNCS_MODEL = a -> {
 		a.setDetectionFunction(
@@ -60,6 +63,20 @@ public class Alpha implements Processor {
 				DetectionType.ONSET,
 				SuperFluxOnsetDetection.class, 
 				SF_ONSET_DETECTION_PARAMS);
+
+	};
+	
+	// SF Onset Detection + AC Tempo Detection
+	private final static Consumer<Alpha> SF_AC_DETECTION_FUNCS_MODEL = a -> {
+		a.setDetectionFunction(
+				DetectionType.ONSET,
+				SuperFluxOnsetDetection.class, 
+				SF_ONSET_DETECTION_PARAMS);
+		
+		a.setDetectionFunction(
+				DetectionType.TEMPO,
+				AutoCorrTempoDetection.class, 
+				AC_TEMPO_DETECTION_PARAMS);
 	};
 	
 	private static Supplier<Consumer<Alpha>> detectionFuncsModelSupplier = () -> DEFAULT_DETECTION_FUNCS_MODEL;
@@ -79,9 +96,7 @@ public class Alpha implements Processor {
 	public void process(String filename) {
 		//System.out.println("Initializing Processor '" + TooSimple.class.getName() + "'...");
 	
-		//detectionFuncsModelSupplier = ()->SD_ONSET_DETECTION_FUNCS_MODEL;
-		//detectionFuncsModelSupplier = ()->LFSF_ONSET_DETECTION_FUNCS_MODEL;
-		detectionFuncsModelSupplier = ()->SF_ONSET_DETECTION_FUNCS_MODEL;
+		detectionFuncsModelSupplier = ()->SF_AC_DETECTION_FUNCS_MODEL;
 		if(detectionFuncsModel == null){
 			detectionFuncsModel = detectionFuncsModelSupplier.get();
 		}

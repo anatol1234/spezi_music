@@ -1,5 +1,6 @@
 package at.jku.cp.spezi.alpha.detection;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -9,6 +10,33 @@ import at.jku.cp.spezi.dsp.Frame;
 
 public class DetectionUtils {
 
+	public static void filterMedian(List<Double> list,int w) {
+		for(int i=0;i<list.size();i++) {
+			double sum=0;
+			int counter=0;
+			List<Double> window=new ArrayList<>();
+			for(int j=i-w;j<i+w;j++) {
+				if(j>=0 && j<list.size()) {
+					window.add(list.get(j));
+					sum+=list.get(j);
+					counter++;
+				}
+			}
+			double med=0;
+			Collections.sort(window);
+			if(window.size()%2!=0) {
+				med = window.get(window.size()/2 +1);
+			} else {
+				med = (window.get(window.size()/2)+window.get(window.size()/2 -1))/2;
+			}
+			sum=sum/counter;
+			if(list.get(i)<med) {
+				list.set(i, 0d);
+			}
+			
+		}
+	}
+	
 	public static double getFilteredMax(Frame x,int m) {
 		double m1 = -1;
 		double m2 = -1;
