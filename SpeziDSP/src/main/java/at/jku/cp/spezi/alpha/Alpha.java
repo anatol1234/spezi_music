@@ -7,26 +7,61 @@ import java.util.function.Supplier;
 
 import at.jku.cp.spezi.alpha.detection.EnergyBasedOnsetDetection;
 import at.jku.cp.spezi.alpha.detection.LFSFOnsetDetection;
+import at.jku.cp.spezi.alpha.detection.SpectralDifferenceOnsetDetection;
+import at.jku.cp.spezi.alpha.detection.SuperFluxOnsetDetection;
 import at.jku.cp.spezi.dsp.AudioFile;
 import at.jku.cp.spezi.dsp.Processor;
 import at.jku.cp.spezi.example.TooSimple;
 
 public class Alpha implements Processor {
 	private static final LFSFOnsetDetection.Parameters LFSF_ONSET_DETECTION_PARAMS = LFSFOnsetDetection.createParams()
-			.w(3)
-			.m(3)
-			.alpha(0.3)
-			.threshold(0.15); 
+			.w1(11).w2(4).w3(18).w4(19).w5(6)
+			.alpha(0.82655126)
+			.threshold(0.2039732669227441)
+			.numOfFilters(138);
+	
 	private static final EnergyBasedOnsetDetection.Parameters EB_ONSET_DETECTION_PARAMS = EnergyBasedOnsetDetection.createParams()
 			.dThreshold(3.1)
 			.epmThreshold(30);
 	
+	private static final SpectralDifferenceOnsetDetection.Parameters SD_ONSET_DETECTION_PARAMS = SpectralDifferenceOnsetDetection.createParams()
+			.alpha(0.82655126)
+			.numOfFilters(138);
+	
+	private static final SuperFluxOnsetDetection.Parameters SF_ONSET_DETECTION_PARAMS = SuperFluxOnsetDetection.createParams()
+			.w1(2).w2(10).w3(18).w4(18).w5(6).mu(3)
+			.alpha(0.82655126)
+			.threshold(0.34489238772825725)
+			.numOfFilters(138);
+			
 	private final static Consumer<Alpha> DEFAULT_DETECTION_FUNCS_MODEL = a -> {
 		a.setDetectionFunction(
 				DetectionType.ONSET,
 				EnergyBasedOnsetDetection.class,
 				EB_ONSET_DETECTION_PARAMS);
 	};
+	
+	private final static Consumer<Alpha> SD_ONSET_DETECTION_FUNCS_MODEL = a -> {
+		a.setDetectionFunction(
+				DetectionType.ONSET,
+				SpectralDifferenceOnsetDetection.class, 
+				SD_ONSET_DETECTION_PARAMS);
+	};
+	
+	private final static Consumer<Alpha> LFSF_ONSET_DETECTION_FUNCS_MODEL = a -> {
+		a.setDetectionFunction(
+				DetectionType.ONSET,
+				LFSFOnsetDetection.class, 
+				LFSF_ONSET_DETECTION_PARAMS);
+	};
+	
+	private final static Consumer<Alpha> SF_ONSET_DETECTION_FUNCS_MODEL = a -> {
+		a.setDetectionFunction(
+				DetectionType.ONSET,
+				SuperFluxOnsetDetection.class, 
+				SF_ONSET_DETECTION_PARAMS);
+	};
+	
 	private static Supplier<Consumer<Alpha>> detectionFuncsModelSupplier = () -> DEFAULT_DETECTION_FUNCS_MODEL;
 	private Consumer<Alpha> detectionFuncsModel;
 	
@@ -42,7 +77,11 @@ public class Alpha implements Processor {
 	
 	@Override
 	public void process(String filename) {
-		System.out.println("Initializing Processor '" + TooSimple.class.getName() + "'...");
+		//System.out.println("Initializing Processor '" + TooSimple.class.getName() + "'...");
+	
+		//detectionFuncsModelSupplier = ()->SD_ONSET_DETECTION_FUNCS_MODEL;
+		//detectionFuncsModelSupplier = ()->LFSF_ONSET_DETECTION_FUNCS_MODEL;
+		detectionFuncsModelSupplier = ()->SF_ONSET_DETECTION_FUNCS_MODEL;
 		if(detectionFuncsModel == null){
 			detectionFuncsModel = detectionFuncsModelSupplier.get();
 		}
@@ -57,7 +96,7 @@ public class Alpha implements Processor {
 		// if you would like to work with multiple DFT resolutions, you would
 		// simply create multiple AudioFile objects with different parameters
 		System.out.println("Computing STFT ...");
-		this.audioFile = new AudioFile(filename, 2048, 1024);
+		this.audioFile = new AudioFile(filename, 2048, 256);
 		System.out.println("Running Analysis...");
 		detectionFuncsModel.accept(this);	
 		detectionsMap.values().forEach(df -> df.detect(audioFile, result));				

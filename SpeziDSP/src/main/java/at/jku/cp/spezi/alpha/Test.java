@@ -9,8 +9,6 @@ public class Test {
 	public static void main(String[] args) {
 
 		String pathParent = "src\\main\\java\\at\\jku\\cp\\spezi\\alpha\\train\\";
-		Processor p = new Alpha();
-		//p.process(pathParent+"train1.wav");
 		
 		try {
 			//predict
