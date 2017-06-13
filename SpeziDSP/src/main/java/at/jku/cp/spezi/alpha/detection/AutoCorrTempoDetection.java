@@ -28,8 +28,8 @@ public class AutoCorrTempoDetection implements DetectionFunction {
 		DetectionUtils.filterMedian(detectionFunction,medianWindow);
 		
 	
-		int lowerBound=(int)Math.floor(0.3/frameDuration);
-		int upperBound=(int)Math.floor(1/frameDuration);
+		int lowerBound=(int)Math.floor(0.24/frameDuration);	//0.3 -> 200 bpm, 0.24 -> 250 bpm
+		int upperBound=(int)Math.floor(1.5/frameDuration); 	//1 -> 60bpm,	1.5 -> 40bpm
 		List<Double> autoCorr = new ArrayList<>();
 
 		// perform the auto-correlation

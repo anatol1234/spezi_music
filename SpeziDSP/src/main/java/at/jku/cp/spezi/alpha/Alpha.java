@@ -32,11 +32,12 @@ public class Alpha implements Processor {
 	private static final SuperFluxOnsetDetection.Parameters SF_ONSET_DETECTION_PARAMS = SuperFluxOnsetDetection.createParams()
 			.w1(2).w2(10).w3(18).w4(18).w5(6).mu(3)
 			.alpha(0.82655126)
-			.threshold(0.34489238772825725)
+			.threshold(0.34489238772825725)	
 			.numOfFilters(138);
 	
 	private static final AutoCorrTempoDetection.Parameters AC_TEMPO_DETECTION_PARAMS = AutoCorrTempoDetection.createParams().medianWindow(10);
 			
+	
 	private final static Consumer<Alpha> DEFAULT_DETECTION_FUNCS_MODEL = a -> {
 		a.setDetectionFunction(
 				DetectionType.ONSET,
@@ -78,7 +79,7 @@ public class Alpha implements Processor {
 				AutoCorrTempoDetection.class, 
 				AC_TEMPO_DETECTION_PARAMS);
 	};
-	
+
 	private static Supplier<Consumer<Alpha>> detectionFuncsModelSupplier = () -> DEFAULT_DETECTION_FUNCS_MODEL;
 	private Consumer<Alpha> detectionFuncsModel;
 	

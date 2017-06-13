@@ -12,14 +12,14 @@ public class DetectionUtils {
 
 	public static void filterMedian(List<Double> list,int w) {
 		for(int i=0;i<list.size();i++) {
-			double sum=0;
-			int counter=0;
+			//double sum=0;
+			//int counter=0;
 			List<Double> window=new ArrayList<>();
 			for(int j=i-w;j<i+w;j++) {
 				if(j>=0 && j<list.size()) {
 					window.add(list.get(j));
-					sum+=list.get(j);
-					counter++;
+					//sum+=list.get(j);
+					//counter++;
 				}
 			}
 			double med=0;
@@ -29,7 +29,7 @@ public class DetectionUtils {
 			} else {
 				med = (window.get(window.size()/2)+window.get(window.size()/2 -1))/2;
 			}
-			sum=sum/counter;
+			//sum=sum/counter;
 			if(list.get(i)<med) {
 				list.set(i, 0d);
 			}
@@ -135,8 +135,11 @@ public class DetectionUtils {
 				}
 			}
 			
+			// fixed threshold
 			boolean cond2=fn>=fk_sum/samples+threshold; //mean value check
 			
+			//with adaptive thresholding
+			//boolean cond2=fn>=fk_sum/samples+adaptiveThreshold(sd,i,0.2,threshold,7);
 
 			
 			if(cond1&&cond2) {
@@ -149,6 +152,27 @@ public class DetectionUtils {
 				//System.out.println(i * frameDuration);
 			}
 		}
+	}
+	
+	public static double adaptiveThreshold(List<Double> d,int t, double alpha, double threshold,int m) {	
+		return threshold+alpha*getMedianOfWindow(d,t,m);
+	}
+	
+	public static double getMedianOfWindow(List<Double> values,int t,int m) {
+		List<Double> window=new ArrayList<>();
+		for(int i=t-m;i<t+m;i++) {
+			if(i>=0 && i<values.size()) {
+				window.add(values.get(i));
+			}
+		}
+		double med=0;
+		Collections.sort(window);
+		if(window.size()%2!=0) {
+			med = window.get(window.size()/2 +1);
+		} else {
+			med = (window.get(window.size()/2)+window.get(window.size()/2 -1))/2;
+		}
+		return med;
 	}
 	
 	public static double thresholdFunction(int n,List<Double> values,double alpha) {

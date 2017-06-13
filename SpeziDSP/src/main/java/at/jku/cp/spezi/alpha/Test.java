@@ -9,7 +9,7 @@ public class Test {
 	public static void main(String[] args) {
 
 		String pathParent = "src\\main\\java\\at\\jku\\cp\\spezi\\alpha\\train\\";
-		
+		//pathParent = "D:\\Studium\\6. Semester\\Audio and Music Processing\\Exercise Track\\backup\\beatles\\";
 		try {
 			//predict
 			String arguments[] = {"-i",pathParent,"-n","alpha.Alpha","-p"};

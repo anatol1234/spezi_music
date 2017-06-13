@@ -1,7 +1,7 @@
-tp 10
-fp 10
-fn 10
-precision 0.5
-recall 0.5
-fmeasure 0.5
-error 3.707169
+tp 12
+fp 8
+fn 8
+precision 0.6
+recall 0.6
+fmeasure 0.6
+error 4.48111
