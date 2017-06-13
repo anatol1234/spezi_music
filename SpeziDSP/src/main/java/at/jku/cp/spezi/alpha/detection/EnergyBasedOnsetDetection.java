@@ -40,8 +40,11 @@ public class EnergyBasedOnsetDetection implements DetectionFunction{
 			if(epm > epmThreshold){
 				result.getOnsets().add(i * frameDuration);
 				sd.add(sum);
+			}else{
+				sd.add(0d);
 			}
 		}
+		sd =DetectionUtils.normalizeValues(sd);
 		result.setOnsetDetectionFunction(sd);
 	}
 	
