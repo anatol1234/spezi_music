@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import at.jku.cp.spezi.alpha.detection.AutoCorrTempoDetection;
+import at.jku.cp.spezi.alpha.detection.CombFilterBeatDetection;
 import at.jku.cp.spezi.alpha.detection.EnergyBasedOnsetDetection;
 import at.jku.cp.spezi.alpha.detection.LFSFOnsetDetection;
 import at.jku.cp.spezi.alpha.detection.SpectralDifferenceOnsetDetection;
@@ -39,6 +40,8 @@ public class Alpha implements Processor {
 	private static final AutoCorrTempoDetection.Parameters AC_TEMPO_DETECTION_PARAMS = AutoCorrTempoDetection.createParams()
 			.medianWindow(10);
 	
+	private static final CombFilterBeatDetection.Parameters CB_BEAT_DETECTION_PARAMS = CombFilterBeatDetection.createParams()
+			.peakDeltaRatio(0.3);
 			
 	private final static Consumer<Alpha> EB_DETECTION_FUNCS_MODEL = a -> {
 		a.setSTFTParams(2048, 1024);
@@ -84,6 +87,10 @@ public class Alpha implements Processor {
 				DetectionType.TEMPO,
 				AutoCorrTempoDetection.class, 
 				AC_TEMPO_DETECTION_PARAMS);
+		a.setDetectionFunction(
+				DetectionType.BEAT,
+				CombFilterBeatDetection.class, 
+				CB_BEAT_DETECTION_PARAMS);
 	};	
 	
 	private static Supplier<Consumer<Alpha>> detectionFuncsModelSupplier = () -> SF_AC_CB_DETECTION_FUNCS_MODEL;

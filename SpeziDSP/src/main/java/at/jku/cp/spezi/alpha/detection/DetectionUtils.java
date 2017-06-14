@@ -137,13 +137,13 @@ public class DetectionUtils {
 			}
 			
 			// fixed threshold
-			//boolean cond2=fn>=fk_sum/samples+threshold; //mean value check
+			boolean cond2=fn>=fk_sum/samples+threshold; //mean value check
 			
 			//with adaptive thresholding
 			//boolean cond2=fn>=fk_sum/samples+adaptiveThreshold(sd,i,0.2,threshold,7);
 				
 			//yet another threshold version adapted from "UNIVERSAL ONSET DETECTION WITH BIDIRECTIONAL LONG-SHORT-TERM MEMORY NEURAL NETWORKS"
-			boolean cond2=fn>=fk_sum/samples+Math.min(Math.max(0.1, 0.478712*getMedianOfWindow(sd,(int)sd.size()/2,(int)sd.size()/2)),0.3);
+			//boolean cond2=fn>=fk_sum/samples+Math.min(Math.max(0.1, 0.478712*getMedianOfWindow(sd,(int)sd.size()/2,(int)sd.size()/2)),0.3);
 			
 			if(cond1&&cond2) {
 				int onsetFrame = i;

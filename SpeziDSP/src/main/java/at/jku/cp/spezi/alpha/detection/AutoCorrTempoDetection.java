@@ -57,7 +57,17 @@ public class AutoCorrTempoDetection implements DetectionFunction {
 		// concert the index to the tempo
 		double pred = 60.0f/(frameDuration*(lowerBound+firstMax));
 		//System.out.println("Pred: "+(pred));
-	
+		
+		//calculate artificial pulse train
+		for(int i = 1; i < frames.size(); i++){
+			double frameTime = i*frameDuration;
+			double pulse = 0.0;
+			if(frameTime % (60f/pred) < frameDuration){
+				pulse = 1.0;
+			}
+			result.getTempoDetectionFunction().add(pulse);
+		}
+		
 		result.getTempo().add(pred);
 	}
 	

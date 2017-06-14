@@ -30,6 +30,11 @@ public class DetectionResult {
 	 * this list contains the values of the onset detection function
 	 */
 	private List<Double> onsetDetectionFunction = new ArrayList<>();
+	
+	/**
+	 * this list contains the values of the tempo detection function
+	 */
+	private List<Double> tempoDetectionFunction = new ArrayList<>();
 
 	public List<Double> getOnsets() {
 		return onsets;
@@ -49,6 +54,14 @@ public class DetectionResult {
 	
 	public void setOnsetDetectionFunction(List<Double> d) {
 		this.onsetDetectionFunction=d;
+	}
+	
+	public List<Double> getTempoDetectionFunction() {
+		return tempoDetectionFunction;
+	}
+	
+	public void setTempoDetectionFunction(List<Double> d) {
+		this.tempoDetectionFunction=d;
 	}
 	
 		
