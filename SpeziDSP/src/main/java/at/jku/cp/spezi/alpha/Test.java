@@ -2,13 +2,14 @@ package at.jku.cp.spezi.alpha;
 
 
 import at.jku.cp.spezi.Runner;
+import at.jku.cp.spezi.dsp.Processor;
 
 public class Test {
 
 	public static void main(String[] args) {
 
 		String pathParent = "src\\main\\java\\at\\jku\\cp\\spezi\\alpha\\train\\";
-		//pathParent = "D:\\Studium\\6. Semester\\Audio and Music Processing\\Exercise Track\\backup\\beatles\\";
+		//pathParent = "D:\\Studium\\6. Semester\\Audio and Music Processing\\Exercise Track\\backup\\beatles\\album_1\\";
 		try {
 			//predict
 			String arguments[] = {"-i",pathParent,"-n","alpha.Alpha","-p"};
@@ -26,6 +27,8 @@ public class Test {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+//		Processor p = new Alpha();
+//		p.process(pathParent+"train2.wav");
 	}
 	
 

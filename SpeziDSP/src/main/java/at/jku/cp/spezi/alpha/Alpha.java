@@ -34,7 +34,7 @@ public class Alpha implements Processor {
 	private static final SuperFluxOnsetDetection.Parameters SF_ONSET_DETECTION_PARAMS = SuperFluxOnsetDetection.createParams()
 			.w1(2).w2(10).w3(18).w4(18).w5(6).mu(3)
 			.alpha(0.82655126)
-			.threshold(0.34489238772825725)	
+			.threshold(0.15)//0.34489238772825725
 			.numOfFilters(138);
 	
 	private static final AutoCorrTempoDetection.Parameters AC_TEMPO_DETECTION_PARAMS = AutoCorrTempoDetection.createParams()
@@ -44,11 +44,15 @@ public class Alpha implements Processor {
 			.peakDeltaRatio(0.3);
 			
 	private final static Consumer<Alpha> EB_DETECTION_FUNCS_MODEL = a -> {
-		a.setSTFTParams(2048, 1024);
+		a.setSTFTParams(2048,1024);
 		a.setDetectionFunction(
 				DetectionType.ONSET,
 				EnergyBasedOnsetDetection.class,
 				EB_ONSET_DETECTION_PARAMS);
+		a.setDetectionFunction(
+				DetectionType.TEMPO,
+				AutoCorrTempoDetection.class, 
+				AC_TEMPO_DETECTION_PARAMS);
 	};
 	
 	private final static Consumer<Alpha> SD_ONSET_DETECTION_FUNCS_MODEL = a -> {
@@ -93,7 +97,15 @@ public class Alpha implements Processor {
 				CB_BEAT_DETECTION_PARAMS);
 	};	
 	
-	private static Supplier<Consumer<Alpha>> detectionFuncsModelSupplier = () -> SF_AC_CB_DETECTION_FUNCS_MODEL;
+	private final static Consumer<Alpha> AC_TEMPO_DETECTION_FUNCS_MODEL = a -> {
+		a.setSTFTParams(2048, 256);
+		a.setDetectionFunction(
+				DetectionType.TEMPO,
+				AutoCorrTempoDetection.class, 
+				AC_TEMPO_DETECTION_PARAMS);
+	};
+	
+	private static Supplier<Consumer<Alpha>> detectionFuncsModelSupplier = () -> SF_ONSET_DETECTION_FUNCS_MODEL;//SF_AC_CB_DETECTION_FUNCS_MODEL;
 	private Consumer<Alpha> detectionFuncsModel;
 	
 	private AudioFile audioFile;
@@ -127,7 +139,15 @@ public class Alpha implements Processor {
 		System.out.println("Computing STFT ...");
 		this.audioFile = new AudioFile(filename, fftsize, hopsize);
 		System.out.println("Running Analysis...");
-		detectionsMap.values().stream().forEachOrdered(df -> df.detect(audioFile, result));				
+		//detectionsMap.values().stream().forEachOrdered(df -> df.detect(audioFile, result));
+		detectionsMap.get(DetectionType.ONSET).detect(audioFile, result);
+		
+		detectionFuncsModel = AC_TEMPO_DETECTION_FUNCS_MODEL;
+		detectionFuncsModel.accept(this);	
+		this.audioFile = new AudioFile(filename, fftsize, hopsize);
+		detectionsMap.get(DetectionType.TEMPO).detect(audioFile, result);
+		
+		
 	}
 
 	public void setSTFTParams(int fftsize, int hopsize){

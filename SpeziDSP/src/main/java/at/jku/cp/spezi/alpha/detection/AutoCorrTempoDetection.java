@@ -20,11 +20,17 @@ public class AutoCorrTempoDetection implements DetectionFunction {
 	}
 	
 	private void tempoAutoCorr(AudioFile file, DetectionResult result) {
+
 		double songDuration = file.getSamples().size()/file.getSampleRate();	
+		List<Double> detectionFunction = result.getOnsetDetectionFunction();
+
+		DetectionUtils.apply_semitoneFilter(file,110,3520);
+		
+		// get the filter frames
 		List<Frame> frames = file.getFrames();
 		double frameDuration = songDuration/frames.size();
 
-		List<Double> detectionFunction = result.getOnsetDetectionFunction();
+		
 		DetectionUtils.filterMedian(detectionFunction,medianWindow);
 		
 	
@@ -54,7 +60,6 @@ public class AutoCorrTempoDetection implements DetectionFunction {
 			}
 		}
 		
-		// concert the index to the tempo
 		double pred = 60.0f/(frameDuration*(lowerBound+firstMax));
 		//System.out.println("Pred: "+(pred));
 		
@@ -70,6 +75,8 @@ public class AutoCorrTempoDetection implements DetectionFunction {
 		
 		result.getTempo().add(pred);
 	}
+	
+
 	
 	public static Parameters createParams(){
 		return new Parameters();

@@ -44,7 +44,7 @@ public class EnergyBasedOnsetDetection implements DetectionFunction{
 				sd.add(0d);
 			}
 		}
-		sd = DetectionUtils.normalizeValues(sd);
+		//sd =DetectionUtils.normalizeValues(sd);
 		result.setOnsetDetectionFunction(sd);
 	}
 	

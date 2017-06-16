@@ -63,7 +63,7 @@ public class DetectionUtils {
 
 		int freq[] = new int[bins.length];
 		for(int i=0;i<freq.length;i++) {
-			freq[i]=(int)Math.floor((1024+1)*bins[i]/44100);
+			freq[i]=(int)Math.floor((frames.get(0).size+1)*bins[i]/44100);
 		}
 		
 
@@ -80,6 +80,52 @@ public class DetectionUtils {
 		}
 	}
 	
+	public static void apply_semitoneFilter(AudioFile file, double minFreq, double maxFreq) {
+		
+
+		List<Frame> frames = file.getFrames();
+		double bins[] = get_log_frequencies(minFreq,maxFreq);
+
+		int freq[] =  new int[bins.length];
+		for(int i=0;i<freq.length;i++) {
+			freq[i]=(int)Math.floor((frames.get(0).size+1)*bins[i]/44100);
+		}
+		for(int i=0;i<frames.size();i++) {
+			Frame f = frames.get(i);
+			//double melMag[]=Utils.hz2Mel(f.magnitudes);
+			//int[] indices=frequencies2bins(f.magnitudes, freq);
+			f.magnitudes=DetectionUtils.melFilter(f.magnitudes, freq, 12);
+			for(int j=0;j<f.magnitudes.length;j++) {
+				f.magnitudes[j]=Math.log10(1+0.8512*f.magnitudes[j]);
+			}
+			frames.set(i,f);
+			
+		}
+
+	}
+	
+
+	
+	public static double[] get_log_frequencies(double fMin,double fMax) {
+		
+		double fRef = 440;
+		int left = (int)Math.floor(Math.log(fMin/fRef))*12;
+		int right = (int)Math.ceil(Math.log(fMax/fRef))*12;
+		
+		int size = Math.abs(left)+Math.abs(right);
+		
+		double freq[] = new double[size];
+		
+		double f = fMin;
+
+		for(int i = 0;i<size;i++) {
+			freq[i] = f;
+			f = Math.pow(2, 1.0/12)*f;
+		}
+		
+		return freq;
+		
+	}
 	
 	public static void peakPicking(List<Double> values,double frameDuration, DetectionResult result) {
 		List<Double > sd = normalizeValues(values);
@@ -140,7 +186,7 @@ public class DetectionUtils {
 			boolean cond2=fn>=fk_sum/samples+threshold; //mean value check
 			
 			//with adaptive thresholding
-			//boolean cond2=fn>=fk_sum/samples+adaptiveThreshold(sd,i,0.2,threshold,7);
+			boolean cond2=fn>=fk_sum/samples+adaptiveThreshold(sd,i,0.245,threshold,20);
 				
 			//yet another threshold version adapted from "UNIVERSAL ONSET DETECTION WITH BIDIRECTIONAL LONG-SHORT-TERM MEMORY NEURAL NETWORKS"
 			//boolean cond2=fn>=fk_sum/samples+Math.min(Math.max(0.1, 0.478712*getMedianOfWindow(sd,(int)sd.size()/2,(int)sd.size()/2)),0.3);
@@ -258,24 +304,24 @@ public class DetectionUtils {
 		return res;
 	}
 	
-	public static int[]	frequencies2bins(double[] frequencies, double[] bin_frequencies) {
-		int indices[]=new int[frequencies.length];
-		for(int i=0;i<frequencies.length;i++) {
-			 double f = frequencies[i];
-			 double distance = Math.abs(bin_frequencies[0] - f);
-			 int idx = 0;
-			 for(int c = 1; c < bin_frequencies.length; c++){
-			     double cdistance = Math.abs(bin_frequencies[c] -f);
-			     if(cdistance < distance){
-			         idx = c;
-			         distance = cdistance;
-			     }
-			 }
-			 indices[i]=idx;
-		}
-		 
-		return indices;
-	}
+//	public static int[]	frequencies2bins(double[] frequencies, double[] bin_frequencies) {
+//		int indices[]=new int[frequencies.length];
+//		for(int i=0;i<frequencies.length;i++) {
+//			 double f = frequencies[i];
+//			 double distance = Math.abs(bin_frequencies[0] - f);
+//			 int idx = 0;
+//			 for(int c = 1; c < bin_frequencies.length; c++){
+//			     double cdistance = Math.abs(bin_frequencies[c] -f);
+//			     if(cdistance < distance){
+//			         idx = c;
+//			         distance = cdistance;
+//			     }
+//			 }
+//			 indices[i]=idx;
+//		}
+//		 
+//		return indices;
+//	}
 
 	
 	/**
