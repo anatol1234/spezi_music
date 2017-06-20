@@ -43,7 +43,7 @@ public class LFSFOnsetDetection implements DetectionFunction{
 		}
 		
 		result.setOnsetDetectionFunction(sd);
-		DetectionUtils.pickPeaksLecture(sd,frameDuration,w1,w2, w3,w4, w5,threshold,result);
+		DetectionUtils.pickPeaksLecture(sd,frameDuration,w1,w2, w3,w4, w5,threshold,result,false);
 	}
 	
 

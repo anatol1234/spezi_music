@@ -12,6 +12,7 @@ import at.jku.cp.spezi.dsp.Frame;
 public class AutoCorrTempoDetection implements DetectionFunction {
 
 	private int medianWindow;
+
 	
 	@Override
 	public void detect(AudioFile file, DetectionResult result) {
@@ -22,11 +23,7 @@ public class AutoCorrTempoDetection implements DetectionFunction {
 	private void tempoAutoCorr(AudioFile file, DetectionResult result) {
 
 		double songDuration = file.getSamples().size()/file.getSampleRate();	
-		List<Double> detectionFunction = result.getOnsetDetectionFunction();
-
-		DetectionUtils.apply_semitoneFilter(file,110,3520);
-		
-		// get the filter frames
+		List<Double> detectionFunction = new ArrayList<>(result.getOnsetDetectionFunction());
 		List<Frame> frames = file.getFrames();
 		double frameDuration = songDuration/frames.size();
 
@@ -34,8 +31,8 @@ public class AutoCorrTempoDetection implements DetectionFunction {
 		DetectionUtils.filterMedian(detectionFunction,medianWindow);
 		
 	
-		int lowerBound=(int)Math.floor(0.24/frameDuration);	//0.3 -> 200 bpm, 0.24 -> 250 bpm
-		int upperBound=(int)Math.floor(1.5/frameDuration); 	//1 -> 60bpm,	1.5 -> 40bpm
+		int lowerBound=(int)Math.floor(0.3/frameDuration);	//0.3 -> 200 bpm, 0.24 -> 250 bpm
+		int upperBound=(int)Math.floor(1./frameDuration); 	//1 -> 60bpm,	1.5 -> 40bpm
 		List<Double> autoCorr = new ArrayList<>();
 
 		// perform the auto-correlation

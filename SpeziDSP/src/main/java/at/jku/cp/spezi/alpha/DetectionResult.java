@@ -10,7 +10,7 @@ public class DetectionResult {
 	 * 
 	 * (time is in seconds)
 	 */
-	private final List<Double> onsets = new ArrayList<>();
+	public List<Double> onsets = new ArrayList<>();
 
 	/**
 	 * this list contain the results of the beat detection step

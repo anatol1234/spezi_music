@@ -6,7 +6,6 @@ import java.util.List;
 import at.jku.cp.spezi.alpha.DetectionFunction;
 import at.jku.cp.spezi.alpha.DetectionFunctionParameters;
 import at.jku.cp.spezi.alpha.DetectionResult;
-import at.jku.cp.spezi.alpha.detection.LFSFOnsetDetection.Parameters;
 import at.jku.cp.spezi.dsp.AudioFile;
 import at.jku.cp.spezi.dsp.Frame;
 
@@ -44,8 +43,8 @@ public class EnergyBasedOnsetDetection implements DetectionFunction{
 				sd.add(0d);
 			}
 		}
-		//sd =DetectionUtils.normalizeValues(sd);
-		result.setOnsetDetectionFunction(sd);
+//		sd =DetectionUtils.normalize01(sd);
+//		result.setOnsetDetectionFunction(sd);
 	}
 	
 	public static Parameters createParams(){

@@ -62,6 +62,8 @@ public class DetectionUtils {
 		double bins[]=DetectionUtils.mel_frequencies(numOfFilters+2, 27.5, 16000);
 
 		int freq[] = new int[bins.length];
+		
+		//round frequency to nearest FFT bins
 		for(int i=0;i<freq.length;i++) {
 			freq[i]=(int)Math.floor((frames.get(0).size+1)*bins[i]/44100);
 		}
@@ -87,18 +89,26 @@ public class DetectionUtils {
 		double bins[] = get_log_frequencies(minFreq,maxFreq);
 
 		int freq[] =  new int[bins.length];
+		
+		//round frequency to nearest FFT bins
 		for(int i=0;i<freq.length;i++) {
 			freq[i]=(int)Math.floor((frames.get(0).size+1)*bins[i]/44100);
 		}
+		
+		
 		for(int i=0;i<frames.size();i++) {
-			Frame f = frames.get(i);
-			//double melMag[]=Utils.hz2Mel(f.magnitudes);
-			//int[] indices=frequencies2bins(f.magnitudes, freq);
-			f.magnitudes=DetectionUtils.melFilter(f.magnitudes, freq, 12);
-			for(int j=0;j<f.magnitudes.length;j++) {
-				f.magnitudes[j]=Math.log10(1+0.8512*f.magnitudes[j]);
+			double filtered[] = new double[12];
+			for(int j=0;j<freq.length;j++) {
+				
+				filtered[j%12] += frames.get(i).magnitudes[freq[j]];
 			}
-			frames.set(i,f);
+
+			for(int j=0;j<12;j++) {
+				filtered[j]=Math.log10(1+filtered[j]);
+				
+			}
+			frames.get(i).magnitudes = filtered;
+	
 			
 		}
 
@@ -156,7 +166,7 @@ public class DetectionUtils {
 		}
 	}
 	
-	public static void pickPeaksLecture(List<Double> values,double frameDuration,int w1, int w2, int w3, int w4, int w5, double threshold, DetectionResult result) {
+	public static void pickPeaksLecture(List<Double> values,double frameDuration,int w1, int w2, int w3, int w4, int w5, double threshold, DetectionResult result,boolean adaptiveThreshold) {
 		List<Double > sd =values;//normalize01(values);//values;// normalizeValues(values);
 		int lastOnsetFrame=-1;
 		
@@ -182,12 +192,15 @@ public class DetectionUtils {
 				}
 			}
 			
-			// fixed threshold
-			boolean cond2=fn>=fk_sum/samples+threshold; //mean value check
+			boolean cond2;
+			if(adaptiveThreshold) {
+				//with adaptive thresholding	0.245,20
+				cond2=fn>=fk_sum/samples+adaptiveThreshold(sd,i,0.025361707,threshold,35);
+			} else {
+				// fixed threshold
+				cond2=fn>=fk_sum/samples+threshold; //mean value check
+			}
 			
-			//with adaptive thresholding
-			boolean cond2=fn>=fk_sum/samples+adaptiveThreshold(sd,i,0.245,threshold,20);
-				
 			//yet another threshold version adapted from "UNIVERSAL ONSET DETECTION WITH BIDIRECTIONAL LONG-SHORT-TERM MEMORY NEURAL NETWORKS"
 			//boolean cond2=fn>=fk_sum/samples+Math.min(Math.max(0.1, 0.478712*getMedianOfWindow(sd,(int)sd.size()/2,(int)sd.size()/2)),0.3);
 			

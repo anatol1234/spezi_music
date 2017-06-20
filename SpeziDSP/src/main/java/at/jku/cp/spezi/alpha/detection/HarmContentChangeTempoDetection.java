@@ -1,7 +1,5 @@
 package at.jku.cp.spezi.alpha.detection;
 
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -26,12 +24,12 @@ public class HarmContentChangeTempoDetection implements DetectionFunction {
 		double songDuration = file.getSamples().size()/file.getSampleRate();	
 		List<Double> detectionFunction = result.getOnsetDetectionFunction();
 		/*
-		 * I tried to incorporate harmonic content changes as described in
+		 * We tried to incorporate harmonic content changes as described in
 		 * REDUCING OCTAVE ERRORS IN TEMPO ESTIMATION BY EMPLOYING HARMONIC CONTENT CHANGES
 		 * by Kim and Lee
 		 * https://iiav.org/icsv21/content/papers/papers/full_paper_451_20140318091819214.pdf
 		 * There seem to be some some details missing respectively not explained well enough
-		 *  which makes it quite hard to re-implement their system
+		 * which makes it quite hard to re-implement their system
 		 */
 	
 		DetectionUtils.apply_semitoneFilter(file,110,3520);
@@ -77,7 +75,9 @@ public class HarmContentChangeTempoDetection implements DetectionFunction {
 		}
 		
 		List<Double> fh = new ArrayList<>();
-		double correctionFactor = 0.35;
+		
+		// A factor of two works good on music with a steady drum beat (tested on the beatles dataset)
+		double correctionFactor = 0.1;
 
 		double detMax = Collections.max(detectionFunction);
 		double deltaMax = Collections.max(delta);
@@ -86,7 +86,8 @@ public class HarmContentChangeTempoDetection implements DetectionFunction {
 		}
 		
 		List<Double> harmCorr = new ArrayList<>();
-		for(int k=0;k<=fh.size();k++) {
+		//(int)Math.floor(0.2/frameDuration);k<=Math.min((int)Math.floor(5/frameDuration),fh.size())
+		for(int k=0;k<fh.size();k++) {
 			double sum=0;
 			for(int n=0;n<fh.size();n++) {
 				if(n-k>=0&&k+n<fh.size()) {
@@ -96,7 +97,7 @@ public class HarmContentChangeTempoDetection implements DetectionFunction {
 			harmCorr.add(sum/fh.size());
 		}
 		
-		DetectionUtils.normalize01(harmCorr);
+		//DetectionUtils.normalize01(harmCorr);
 		//(int)Math.floor(0.24/frameDuration)
 		// find the index of the largest value
 		int k=0;
@@ -108,20 +109,19 @@ public class HarmContentChangeTempoDetection implements DetectionFunction {
 			}
 		}
 		
-		StringBuffer sb = new StringBuffer();
+		// find the index of the second largest value
+		int k1 = 0;
+		kMax=-1;
 		
-		for(double d : harmCorr) {
-			sb.append(d+",");
+		for(int i=10;i<harmCorr.size();i++) {
+			if(harmCorr.get(i)>kMax&&(i<k-5||i>k+5)) {
+				kMax=harmCorr.get(i);
+				k1=i;
+			}
 		}
-		PrintWriter out;
-		try {
-			out = new PrintWriter("Harm.txt");
-			out.println(sb.toString());
-			out.close();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		k = Math.abs(k1-k);
+		
+
 		
 		double k_val = 60.0f/(frameDuration*(k));
 		
@@ -129,8 +129,8 @@ public class HarmContentChangeTempoDetection implements DetectionFunction {
 		DetectionUtils.filterMedian(detectionFunction,medianWindow);
 		
 	
-		int lowerBound=(int)Math.floor(0.24/frameDuration);	//0.3 -> 200 bpm, 0.24 -> 250 bpm
-		int upperBound=(int)Math.floor(1.5/frameDuration); 	//1 -> 60bpm,	1.5 -> 40bpm
+		int lowerBound=(int)Math.floor(0.3/frameDuration);	//0.3 -> 200 bpm, 0.24 -> 250 bpm
+		int upperBound=(int)Math.floor(1./frameDuration); 	//1 -> 60bpm,	1.5 -> 40bpm
 		List<Double> autoCorr = new ArrayList<>();
 
 		// perform the auto-correlation
@@ -160,7 +160,7 @@ public class HarmContentChangeTempoDetection implements DetectionFunction {
 		//System.out.println("Pred: "+(pred));
 	
 		
-		double theta[] = {pred/6,pred/4,pred/3,pred/2,2*pred/3,pred,3*pred/2,2*pred}; //pred/6,pred/4,pred/3,,3*pred/2
+		double theta[] = {pred/2,pred,2*pred}; //pred/6,pred/4,pred/3,,3*pred/2
 		
 		double minDiff = 100000;
 		int index = 0;
@@ -171,6 +171,15 @@ public class HarmContentChangeTempoDetection implements DetectionFunction {
 				index = i;
 				minDiff = diff;
 			}
+		}
+		//calculate artificial pulse train
+		for(int i = 1; i < frames.size(); i++){
+			double frameTime = i*frameDuration;
+			double pulse = 0.0;
+			if(frameTime % (60f/pred) < frameDuration){
+				pulse = 1.0;
+			}
+			result.getTempoDetectionFunction().add(pulse);
 		}
 		
 		result.getTempo().add(theta[index]);

@@ -1,13 +1,11 @@
 package at.jku.cp.spezi.alpha.detection;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import at.jku.cp.spezi.alpha.DetectionFunction;
 import at.jku.cp.spezi.alpha.DetectionFunctionParameters;
 import at.jku.cp.spezi.alpha.DetectionResult;
-import at.jku.cp.spezi.alpha.detection.LFSFOnsetDetection.Parameters;
 import at.jku.cp.spezi.dsp.AudioFile;
 import at.jku.cp.spezi.dsp.Frame;
 

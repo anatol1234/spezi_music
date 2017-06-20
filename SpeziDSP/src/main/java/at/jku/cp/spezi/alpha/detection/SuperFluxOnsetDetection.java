@@ -13,6 +13,7 @@ public class SuperFluxOnsetDetection implements DetectionFunction {
 	private int w1,w2,w3,w4,w5,mu;	
 	private double threshold,alpha;
 	private int numOfFilters;
+	private boolean adaptiveThreshold;
 
 	@Override
 	public void detect(AudioFile file, DetectionResult result) {
@@ -44,7 +45,7 @@ public class SuperFluxOnsetDetection implements DetectionFunction {
 		
 		
 		result.setOnsetDetectionFunction(sd);
-		DetectionUtils.pickPeaksLecture(sd,frameDuration,w1,w2,w3,w4,w5,threshold,result);
+		DetectionUtils.pickPeaksLecture(sd,frameDuration,w1,w2,w3,w4,w5,threshold,result,adaptiveThreshold);
 	}
 	
 
@@ -101,5 +102,9 @@ public class SuperFluxOnsetDetection implements DetectionFunction {
 			return this;
 		}
 		
+		public Parameters adaptiveThreshold(boolean adaptiveThreshold){
+			pushParam(df -> df.adaptiveThreshold=adaptiveThreshold);
+			return this;
+		}
 	}
 }

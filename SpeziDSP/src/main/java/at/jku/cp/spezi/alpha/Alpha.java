@@ -1,5 +1,6 @@
 package at.jku.cp.spezi.alpha;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.Consumer;
@@ -8,7 +9,9 @@ import java.util.function.Supplier;
 import at.jku.cp.spezi.alpha.detection.AutoCorrTempoDetection;
 import at.jku.cp.spezi.alpha.detection.CombFilterBeatDetection;
 import at.jku.cp.spezi.alpha.detection.EnergyBasedOnsetDetection;
+import at.jku.cp.spezi.alpha.detection.HarmContentChangeTempoDetection;
 import at.jku.cp.spezi.alpha.detection.LFSFOnsetDetection;
+import at.jku.cp.spezi.alpha.detection.MultiAgentTempoBeat;
 import at.jku.cp.spezi.alpha.detection.SpectralDifferenceOnsetDetection;
 import at.jku.cp.spezi.alpha.detection.SuperFluxOnsetDetection;
 import at.jku.cp.spezi.dsp.AudioFile;
@@ -32,16 +35,22 @@ public class Alpha implements Processor {
 			.numOfFilters(138);
 	
 	private static final SuperFluxOnsetDetection.Parameters SF_ONSET_DETECTION_PARAMS = SuperFluxOnsetDetection.createParams()
-			.w1(2).w2(10).w3(18).w4(18).w5(6).mu(3)
+			.w1(7).w2(5).w3(30).w4(16).w5(5).mu(4)
 			.alpha(0.82655126)
-			.threshold(0.15)//0.34489238772825725
-			.numOfFilters(138);
+			.threshold(0.44459844665206755)//0.34489238772825725,0.44459844665206755
+			.numOfFilters(138)
+			.adaptiveThreshold(true);
 	
 	private static final AutoCorrTempoDetection.Parameters AC_TEMPO_DETECTION_PARAMS = AutoCorrTempoDetection.createParams()
-			.medianWindow(10);
+			.medianWindow(40);
+	
+	private static final HarmContentChangeTempoDetection.Parameters HC_TEMPO_DETECTION_PARAMS = HarmContentChangeTempoDetection.createParams()
+			.medianWindow(20);
 	
 	private static final CombFilterBeatDetection.Parameters CB_BEAT_DETECTION_PARAMS = CombFilterBeatDetection.createParams()
 			.peakDeltaRatio(0.3);
+	
+	private static final MultiAgentTempoBeat.Parameters MULTI_AGENT_DETECTION_PARAMS = MultiAgentTempoBeat.createParams();
 			
 	private final static Consumer<Alpha> EB_DETECTION_FUNCS_MODEL = a -> {
 		a.setSTFTParams(2048,1024);
@@ -91,10 +100,27 @@ public class Alpha implements Processor {
 				DetectionType.TEMPO,
 				AutoCorrTempoDetection.class, 
 				AC_TEMPO_DETECTION_PARAMS);
+//		a.setDetectionFunction(
+//				DetectionType.BEAT,
+//				CombFilterBeatDetection.class, 
+//				CB_BEAT_DETECTION_PARAMS);
+	};	
+	
+	// SF Onset Detection + AC Tempo Detection
+	private final static Consumer<Alpha> SF_HC_CB_DETECTION_FUNCS_MODEL = a -> {
+		a.setSTFTParams(2048, 256);
 		a.setDetectionFunction(
-				DetectionType.BEAT,
-				CombFilterBeatDetection.class, 
-				CB_BEAT_DETECTION_PARAMS);
+				DetectionType.ONSET,
+				SuperFluxOnsetDetection.class, 
+				SF_ONSET_DETECTION_PARAMS);		
+		a.setDetectionFunction(
+				DetectionType.TEMPO,
+				HarmContentChangeTempoDetection.class, 
+				HC_TEMPO_DETECTION_PARAMS);
+//		a.setDetectionFunction(
+//				DetectionType.BEAT,
+//				CombFilterBeatDetection.class, 
+//				CB_BEAT_DETECTION_PARAMS);
 	};	
 	
 	private final static Consumer<Alpha> AC_TEMPO_DETECTION_FUNCS_MODEL = a -> {
@@ -105,7 +131,15 @@ public class Alpha implements Processor {
 				AC_TEMPO_DETECTION_PARAMS);
 	};
 	
-	private static Supplier<Consumer<Alpha>> detectionFuncsModelSupplier = () -> SF_ONSET_DETECTION_FUNCS_MODEL;//SF_AC_CB_DETECTION_FUNCS_MODEL;
+	private final static Consumer<Alpha> MULTI_AGENT_DETECTION_FUNCS_MODEL = a -> {
+		a.setSTFTParams(2048, 256);
+		a.setDetectionFunction(
+				DetectionType.BEAT,
+				MultiAgentTempoBeat.class,
+				MULTI_AGENT_DETECTION_PARAMS);
+	};
+	
+	private static Supplier<Consumer<Alpha>> detectionFuncsModelSupplier = () -> SF_HC_CB_DETECTION_FUNCS_MODEL;
 	private Consumer<Alpha> detectionFuncsModel;
 	
 	private AudioFile audioFile;
@@ -126,7 +160,7 @@ public class Alpha implements Processor {
 		
 		detectionFuncsModel = detectionFuncsModelSupplier.get();		
 		result = new DetectionResult();
-		
+		//detectionsMap.remove(DetectionType.ONSET);
 		// an AudioFile object is created with the following parameters
 		// AudioFile(WAVFILENAME, fftSize, hopSize, OPTIONAL: window function)
 		// sizes are in samples
@@ -142,11 +176,22 @@ public class Alpha implements Processor {
 		//detectionsMap.values().stream().forEachOrdered(df -> df.detect(audioFile, result));
 		detectionsMap.get(DetectionType.ONSET).detect(audioFile, result);
 		
-		detectionFuncsModel = AC_TEMPO_DETECTION_FUNCS_MODEL;
-		detectionFuncsModel.accept(this);	
-		this.audioFile = new AudioFile(filename, fftsize, hopsize);
-		detectionsMap.get(DetectionType.TEMPO).detect(audioFile, result);
+		//List<Double> onsets = new ArrayList<>(result.getOnsets());
+	
 		
+		//detectionsMap.remove(DetectionType.ONSET);
+		//detectionFuncsModel=SF_AC_CB_DETECTION_FUNCS_MODEL;
+		//detectionFuncsModel.accept(this);
+		
+		//this.audioFile = new AudioFile(filename, fftsize, hopsize);
+		//AudioFile file = new AudioFile(filename, fftsize, hopsize);
+//		detectionsMap.get(DetectionType.TEMPO).detect(file, result);
+		detectionsMap.get(DetectionType.TEMPO).detect(audioFile, result);
+		//result.onsets = onsets;
+		detectionFuncsModel  = MULTI_AGENT_DETECTION_FUNCS_MODEL;
+		detectionFuncsModel.accept(this);
+		detectionsMap.get(DetectionType.BEAT).detect(audioFile, result);
+		//detectionsMap.get(DetectionType.BEAT).detect(audioFile, result);
 		
 	}
 
